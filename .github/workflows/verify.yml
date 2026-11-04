@@ -1,0 +1,45 @@
+name: Verify delivery
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      CHAT_MODEL: test-model
+      CHAT_BASE_URL: http://127.0.0.1:1/v1
+      CHAT_API_KEY: test
+      EMBED_API_KEY: test
+      RERANK_API_KEY: test
+      MYSQL_PASSWORD: ciDatabaseOnly
+      MYSQL_ROOT_PASSWORD: ciRootOnly
+      MINIO_PASSWORD: ciMinioOnly
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.12.5"
+      - run: uv sync --locked --python 3.12
+      - run: uv run --locked pytest -q tests/test_release_health.py tests/test_business_verification.py tests/test_llm_structured.py tests/test_static.py tests/test_context_assembly.py tests/test_prompt_cache_prefix.py tests/graph/test_routing.py tests/graph/test_forced_rag.py tests/core/test_layers.py tests/core/test_observability.py tests/tools/test_engine.py tests/tools/test_order_ownership.py tests/tools/test_mcp_servers.py
+      - name: Validate and build the delivery image
+        run: |
+          cp .env.example .env
+          docker compose -f compose.release.yml config --quiet
+          docker compose -f compose.release.yml build app
+      - name: Check container readiness
+        run: |
+          docker compose -f compose.release.yml up -d --wait --wait-timeout 300
+          curl -fsS http://127.0.0.1:8080/healthz
+          curl -fsS http://127.0.0.1:8080/readyz
+      - name: Print logs on failure
+        if: failure()
+        run: docker compose -f compose.release.yml logs --tail 80
+      - name: Stop the verification stack
+        if: always()
+        run: docker compose -f compose.release.yml down

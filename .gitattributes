@@ -1,0 +1,8 @@
+* text=auto eol=lf
+# Keep executable scripts and configuration portable.
+*.sh       text eol=lf
+Makefile   text eol=lf
+*.py       text eol=lf
+*.sql      text eol=lf
+*.yml      text eol=lf
+*.yaml     text eol=lf

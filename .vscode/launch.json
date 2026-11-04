@@ -1,0 +1,27 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+
+    {
+      "name": "MewHelp：调试客服主程序",
+      "type": "debugpy",
+      "request": "launch",
+      "python": "${workspaceFolder}/.venv/Scripts/python.exe",
+      "module": "uvicorn",
+      "args": ["app.main:app", "--host", "127.0.0.1", "--port", "8000"],
+      "cwd": "${workspaceFolder}",
+      "envFile": "${workspaceFolder}/.env",
+      "env": {"PYTHONUTF8": "1", "PYTHONUNBUFFERED": "1", "PYTHONPATH": "${workspaceFolder}"},
+      "console": "integratedTerminal",
+      "redirectOutput": true,
+      "justMyCode": true,
+      "subProcess": false,
+      "preLaunchTask": "MewHelp: prepare debug",
+      "serverReadyAction": {
+        "pattern": "Uvicorn running on (http://127\\.0\\.0\\.1:8000)",
+        "uriFormat": "%s",
+        "action": "openExternally"
+      }
+    }
+  ]
+}
